@@ -1,0 +1,135 @@
+{
+  "name": "1c-xbsl-terminal",
+  "displayName": "Терминал (Bash)",
+  "description": "Интерактивный Bash-терминал для IDE 1С:Элемент: вкладки, цвета, история и полноэкранные программы.",
+  "version": "0.1.0",
+  "publisher": "Alexandr Volkov",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/avolkov-git/1c-xbsl-terminal.git"
+  },
+  "engines": {
+    "vscode": "^1.97.0",
+    "node": ">=18.17"
+  },
+  "main": "./dist/extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:xbslTerminal.console",
+    "onCommand:xbslTerminal.new",
+    "onCommand:xbslTerminal.configure"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "xbslTerminal.new",
+        "title": "Терминал: Новый Bash",
+        "icon": "$(add)"
+      },
+      {
+        "command": "xbslTerminal.configure",
+        "title": "Терминал: Выбрать Bash на сервере",
+        "icon": "$(settings-gear)"
+      }
+    ],
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "xbslTerminal",
+          "title": "Терминал",
+          "icon": "resources/terminal.svg"
+        }
+      ]
+    },
+    "views": {
+      "xbslTerminal": [
+        {
+          "id": "xbslTerminal.console",
+          "name": "Bash",
+          "type": "webview"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "xbslTerminal.new",
+          "when": "view == xbslTerminal.console",
+          "group": "navigation"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "xbslTerminal.new",
+        "key": "ctrl+alt+shift+t",
+        "mac": "cmd+alt+shift+t"
+      }
+    ],
+    "configuration": {
+      "title": "Терминал (Bash)",
+      "properties": {
+        "xbslTerminal.bashPath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "Абсолютный путь к Bash на сервере. Пустое значение: определить автоматически. Настройка проекта не используется."
+        }
+      }
+    }
+  },
+  "xbsl": {
+    "schemaVersion": 1,
+    "compatibility": {
+      "basis": "vscode-api-only"
+    },
+    "package": {
+      "dependenciesBundled": true,
+      "requiredFiles": [
+        "dist/extension.js",
+        "dist/terminal.js",
+        "dist/terminal.css",
+        "resources/terminal.svg",
+        "bin/runtime.json",
+        "THIRD_PARTY_NOTICES.txt",
+        "bin/linux-x64/terminal-pty",
+        "bin/linux-arm64/terminal-pty",
+        "bin/win32-x64/terminal-pty.exe",
+        "bin/win32-arm64/terminal-pty.exe",
+        "bin/darwin-x64/terminal-pty",
+        "bin/darwin-arm64/terminal-pty"
+      ]
+    }
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "node scripts/build.mjs",
+    "build:helpers": "node scripts/build-helpers.mjs",
+    "test": "tsx --test tests/*.test.ts",
+    "test:ui": "tsx scripts/check-ui.ts",
+    "package": "npm run check && npm run build && node scripts/licenses.mjs && node scripts/package.mjs",
+    "check:element": "node scripts/check-element.mjs"
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "0.10.0",
+    "@xterm/xterm": "5.5.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "@types/node": "22.15.30",
+    "@types/vscode": "1.97.0",
+    "@types/yazl": "2.4.5",
+    "esbuild": "0.25.12",
+    "prettier": "3.6.2",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "yazl": "3.3.1"
+  }
+}

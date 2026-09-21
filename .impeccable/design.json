@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-21T19:29:39.275Z",
+  "title": "Design System: 1C XBSL Terminal",
+  "extensions": {
+    "typographyMeta": {
+      "body": {
+        "displayName": "Интерфейс IDE",
+        "purpose": "Список сессий и кнопки наследуют шрифт host."
+      },
+      "label": {
+        "displayName": "Служебные подписи",
+        "purpose": "Статус и строка каталога."
+      },
+      "title": {
+        "displayName": "Заголовок пустого состояния",
+        "purpose": "Единственный заголовок внутри панели."
+      },
+      "support": {
+        "displayName": "Пояснение",
+        "purpose": "Текст под заголовком пустого состояния."
+      },
+      "terminal": {
+        "displayName": "Вывод Bash",
+        "purpose": "Шрифт редактора; размер xterm фиксирован."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": [
+      {
+        "name": "narrow-panel",
+        "value": "360px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Открыть Bash",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Основное действие пустого состояния.",
+      "html": "<button class=\"ds-primary\">Открыть Bash</button>",
+      "css": ".ds-primary{font:var(--vscode-font-size,13px) var(--vscode-font-family,system-ui,sans-serif);padding:5px 13px;background:var(--vscode-button-background,#007acc);color:var(--vscode-button-foreground,#fff);border:1px solid transparent;border-radius:2px;cursor:pointer}.ds-primary:hover{background:var(--vscode-button-hoverBackground,#0062a3)}.ds-primary:focus-visible{outline:1px solid var(--vscode-focusBorder,#007fd4);outline-offset:-1px;}@media(forced-colors:active){.ds-primary{border-color:ButtonText}}"
+    },
+    {
+      "name": "Кнопка toolbar",
+      "kind": "button",
+      "refersTo": "button-icon",
+      "description": "Квадратная кнопка действия; пример — новая сессия.",
+      "html": "<button class=\"ds-icon\" aria-label=\"Новый Bash\" title=\"Новый Bash\"><svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.3\" aria-hidden=\"true\"><path d=\"M8 2v12M2 8h12\"/></svg></button>",
+      "css": ".ds-icon{font:var(--vscode-font-size,13px) var(--vscode-font-family,system-ui,sans-serif);color:var(--vscode-terminal-foreground,var(--vscode-foreground,#ccc));box-sizing:border-box;width:28px;height:28px;padding:5px;border:1px solid transparent;border-radius:3px;background:transparent;cursor:pointer}.ds-icon svg{display:block;width:16px;height:16px}.ds-icon:hover:not(:disabled){background:var(--vscode-toolbar-hoverBackground,#ffffff15)}.ds-icon:disabled{opacity:.35;cursor:default}.ds-icon:focus-visible{outline:1px solid var(--vscode-focusBorder,#007fd4);outline-offset:-1px;}@media(forced-colors:active){.ds-icon{border-color:ButtonText}}"
+    },
+    {
+      "name": "Выбор сессии",
+      "kind": "input",
+      "refersTo": "session-select",
+      "description": "Нативный список с русским доступным именем.",
+      "html": "<label class=\"ds-picker\"><select class=\"ds-select\" aria-label=\"Сессия Bash\"><option>bash 1</option><option>bash 2 · завершён</option></select></label>",
+      "css": ".ds-picker{display:block;min-width:50px;max-width:180px;flex:1}.ds-select{font:var(--vscode-font-size,13px) var(--vscode-font-family,system-ui,sans-serif);color:var(--vscode-terminal-foreground,var(--vscode-foreground,#ccc));box-sizing:border-box;width:100%;height:26px;border:1px solid transparent;border-radius:2px;padding:2px 5px;background:var(--vscode-dropdown-background,#313131)}.ds-select:focus-visible{outline:1px solid var(--vscode-focusBorder,#007fd4);outline-offset:-1px;}@media(forced-colors:active){.ds-select{border-color:ButtonText}}"
+    },
+    {
+      "name": "Ошибка сессии",
+      "kind": "custom",
+      "refersTo": "notice",
+      "description": "Полоса над терминалом; техническая причина приходит из host.",
+      "html": "<div class=\"ds-notice\" role=\"alert\">Не удалось запустить Bash: no such file or directory</div>",
+      "css": ".ds-notice{font:var(--vscode-font-size,13px) var(--vscode-font-family,system-ui,sans-serif);font-size:12px;line-height:1.45;padding:8px 12px;border-bottom:1px solid var(--vscode-inputValidation-warningBorder,#b89500);color:var(--vscode-foreground,#ccc);background:var(--vscode-inputValidation-warningBackground,#352a05);overflow-wrap:anywhere;max-height:100px;overflow:auto}"
+    },
+    {
+      "name": "Каталог сессии",
+      "kind": "custom",
+      "refersTo": "workspace-footer",
+      "description": "Путь из состояния сессии с многоточием и полным значением в title.",
+      "html": "<footer class=\"ds-footer\"><span class=\"ds-location\" title=\"/workspace/project\">/workspace/project</span></footer>",
+      "css": ".ds-footer{font:var(--vscode-font-size,13px) var(--vscode-font-family,system-ui,sans-serif);box-sizing:border-box;height:24px;min-height:24px;border-top:1px solid var(--vscode-panel-border,#333);padding:4px 10px;font-size:11px;color:var(--vscode-descriptionForeground,#aaa)}.ds-location{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Терминал VS Code рядом с кодом",
+    "overview": "Терминал продолжает интерфейс IDE: компактные элементы управления, цвета текущей темы и моноширинный вывод. Выбранный владельцем ориентир — терминал VS Code; отдельная декоративная идентичность здесь не вводится.\n\nОсновное место занимает работа с Bash. Нет теней, декоративных изображений или переходов; мигание курсора включено штатной настройкой xterm.",
+    "keyCharacteristics": [
+      "Цвета и шрифты из темы host.",
+      "Компактные действия с русскими доступными именами.",
+      "Постоянная область терминала и видимый каталог сессии."
+    ],
+    "rules": [],
+    "dos": [
+      "Do наследовать семантические токены VS Code и сохранять светлую, тёмную и forced-colors темы.",
+      "Do отдавать свободное пространство терминалу и возвращать в него фокус после выбора сессии и очистки.",
+      "Do показывать ошибку конкретной сессии только в контексте этой сессии.",
+      "Do сохранять русские подписи, доступные имена и видимую рамку клавиатурного фокуса."
+    ],
+    "donts": [
+      "Don't заменять выбранный нативный стиль карточками, тенями, рекламными блоками или декоративной анимацией.",
+      "Don't фиксировать собственную палитру поверх токенов IDE.",
+      "Don't представлять браузерные снимки и статическую проверку panel → bottom как нативный запуск в Элементе."
+    ]
+  }
+}

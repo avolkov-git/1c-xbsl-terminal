@@ -1,0 +1,35 @@
+{
+  "protocol": 1,
+  "files": {
+    "linux-x64": {
+      "file": "bin/linux-x64/terminal-pty",
+      "size": 2338978,
+      "sha256": "0f92d35cffa048f287819f14fe7bc174277da8697439c8f93a78540b43c9e00a"
+    },
+    "linux-arm64": {
+      "file": "bin/linux-arm64/terminal-pty",
+      "size": 2293922,
+      "sha256": "acbb22f9991bea2ca87ce1ad1732752281ce8fb2eb8b915029821dd2f323d764"
+    },
+    "win32-x64": {
+      "file": "bin/win32-x64/terminal-pty.exe",
+      "size": 2432512,
+      "sha256": "61c38d6fc16d3a77485d8038939ce2279dd0c9f97caf55927c25e8cea897900a"
+    },
+    "win32-arm64": {
+      "file": "bin/win32-arm64/terminal-pty.exe",
+      "size": 2291200,
+      "sha256": "c193db59f3f3a7ac195ca145e3ccd63668b1ba62658923f7b7abad786267cf6e"
+    },
+    "darwin-x64": {
+      "file": "bin/darwin-x64/terminal-pty",
+      "size": 2311808,
+      "sha256": "b406897e30fbd709e69ec819154238687f2ad4390b60df2d5303bb8e4076de74"
+    },
+    "darwin-arm64": {
+      "file": "bin/darwin-arm64/terminal-pty",
+      "size": 2214386,
+      "sha256": "efc412b898cf56afd01dfe06fe559b4b41d69afdf32f30eb9df00c6174dbcfc3"
+    }
+  }
+}
