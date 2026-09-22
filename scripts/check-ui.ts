@@ -82,6 +82,10 @@ async function main() {
       );
     }
     await theme("light");
+    await expect(page.locator("#new")).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Переименовать сессию", exact: true }),
+    ).toBeDisabled();
     await page.screenshot({ path: ".test-output/empty-light.png" });
     await page
       .getByRole("button", { name: "Открыть Bash", exact: true })
@@ -94,12 +98,30 @@ async function main() {
     );
     await page.locator(".xterm-helper-textarea").press("Enter");
     await expect(page.locator(".xterm-rows")).toContainText("Bash ready");
-    await page.getByRole("button", { name: "Новый Bash", exact: true }).click();
+    // The + belongs to the native IDE header; invoke its registered command.
+    await host.commands.get("xbslTerminal.new")!();
     await expect(page.locator("#sessions option")).toHaveCount(2);
     const ids = await page
       .locator("#sessions option")
       .evaluateAll((els) => els.map((e) => (e as HTMLOptionElement).value));
     await page.locator("#sessions").selectOption(ids[0]);
+    host.configure("Логи & <server>");
+    await page
+      .getByRole("button", { name: "Переименовать сессию", exact: true })
+      .click();
+    await expect(page.locator("#sessions option:checked")).toHaveText(
+      "Логи & <server>",
+    );
+    await expect(page.locator("#sessions")).toHaveAttribute(
+      "title",
+      "Логи & <server>",
+    );
+    await expect(page.locator("#sessions")).toHaveValue(ids[0]);
+    await page.locator("#sessions").selectOption(ids[1]);
+    await page.locator("#sessions").selectOption(ids[0]);
+    await expect(page.locator("#sessions option:checked")).toHaveText(
+      "Логи & <server>",
+    );
     await expect(
       page.locator(".terminal-surface:not([hidden]) .xterm-rows"),
     ).toContainText("Bash ready");
@@ -112,7 +134,7 @@ async function main() {
       .getByRole("button", { name: "Путь к Bash", exact: true })
       .click();
     await waitFor(() => host.global() === broken, "test shell configuration");
-    await page.getByRole("button", { name: "Новый Bash", exact: true }).click();
+    await host.commands.get("xbslTerminal.new")!();
     await expect(page.locator("#status")).toHaveText("Ошибка");
     await expect(page.locator("#notice")).toBeVisible();
     await page.screenshot({ path: ".test-output/session-error.png" });
@@ -134,7 +156,7 @@ async function main() {
       .click();
     await waitFor(() => host.global() === "", "restore Bash configuration");
     // A configuration notice is global; selecting a session must not turn it into an old session error.
-    await page.getByRole("button", { name: "Новый Bash", exact: true }).click();
+    await host.commands.get("xbslTerminal.new")!();
     await expect(page.locator("#sessions option")).toHaveCount(3);
     await page
       .getByRole("button", { name: "Закрыть сессию", exact: true })
@@ -147,7 +169,37 @@ async function main() {
     await page.screenshot({ path: ".test-output/terminal-light.png" });
     await theme("dark");
     await page.screenshot({ path: ".test-output/terminal-dark.png" });
+    host.configure("Журнал выполнения команд сервера — " + "я".repeat(40));
+    await page
+      .getByRole("button", { name: "Переименовать сессию", exact: true })
+      .click();
+    await expect(page.locator("#sessions option:checked")).toHaveText(
+      "Журнал выполнения команд сервера — " + "я".repeat(40),
+    );
+    for (const width of [1100, 600, 361, 320]) {
+      await page.setViewportSize({ width, height: 280 });
+      const actions = await page.locator(".actions").boundingBox();
+      assert.ok(
+        actions && Math.abs(actions.x + actions.width - (width - 8)) < 1,
+        "actions anchored to the right",
+      );
+      const picker = await page.locator(".session-controls").boundingBox();
+      assert.ok(
+        picker && picker.x + picker.width <= actions.x,
+        "session controls do not overlap actions",
+      );
+      assert.equal(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth > window.innerWidth,
+        ),
+        false,
+        "long name does not overflow",
+      );
+    }
     await page.setViewportSize({ width: 320, height: 280 });
+    await page.locator("#sessions").focus();
+    await page.keyboard.press("Tab");
+    await expect(page.locator("#rename")).toBeFocused();
     await page.screenshot({ path: ".test-output/terminal-narrow.png" });
     assert.equal(
       await page.evaluate(
@@ -169,6 +221,7 @@ async function main() {
     await expect(
       page.getByRole("button", { name: "Открыть Bash", exact: true }),
     ).toBeVisible();
+    await expect(page.locator("#rename")).toBeDisabled();
     host.configure("/absent/xbsl-bash");
     await page
       .getByRole("button", { name: "Путь к Bash", exact: true })
@@ -181,7 +234,7 @@ async function main() {
     assert.deepEqual(errors, []);
     assert.equal(requests, 0);
     console.log(
-      "PASS: real Bash bridge, 2 sessions, selection, resize, clear, close, config error; light/dark/320px; zero network requests or page errors.",
+      "PASS: real Bash bridge, native-header new command, rename, selection, resize, clear, close, config error; light/dark/320–1100px; long names and keyboard focus; zero network requests or page errors.",
     );
   } catch (e) {
     console.error({

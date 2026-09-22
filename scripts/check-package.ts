@@ -4,8 +4,9 @@ import path from "node:path";
 import assert from "node:assert/strict";
 import { hostHarness, waitFor } from "../tests/host-harness";
 async function main() {
+  const manifest = JSON.parse(await fs.readFile("package.json", "utf8"));
   const root = path.resolve(
-    process.argv[2] ?? "release/1c-xbsl-terminal-0.1.0",
+    process.argv[2] ?? `release/${manifest.name}-${manifest.version}`,
   );
   const entry = await fs.readFile(path.join(root, "dist/extension.js"), "utf8");
   for (const m of entry.matchAll(/require\("([^"]+)"\)/g))

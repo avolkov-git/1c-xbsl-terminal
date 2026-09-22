@@ -35,6 +35,16 @@ button {
   padding: 0 8px;
   border-bottom: 1px solid var(--vscode-panel-border, #333);
 }
+.session-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  flex: 0 1 212px;
+}
+#rename {
+  flex: none;
+}
 .session-picker {
   min-width: 50px;
   max-width: 180px;
@@ -47,10 +57,13 @@ select {
   background: var(--vscode-dropdown-background, #313131);
   border-radius: 2px;
   padding: 2px 5px;
+  text-overflow: ellipsis;
 }
 .actions {
   display: flex;
   gap: 2px;
+  margin-left: auto;
+  flex: none;
 }
 button:not(.primary) {
   height: 28px;

@@ -3,6 +3,15 @@ import { Session } from "./session";
 import { resolveBash, workingDirectory } from "./shell";
 import { html } from "./webview";
 
+function sessionNameError(value: string) {
+  if (!value.trim()) return "Введите название сессии.";
+  if (value.trim().length > 80)
+    return "Название должно быть не длиннее 80 символов.";
+  if (/[\u0000-\u001f\u007f-\u009f]/.test(value))
+    return "Название должно быть одной строкой без управляющих символов.";
+  return undefined;
+}
+
 class TerminalView implements vscode.WebviewViewProvider, vscode.Disposable {
   private view?: vscode.WebviewView;
   private sessions = new Map<string, Session>();
@@ -10,6 +19,7 @@ class TerminalView implements vscode.WebviewViewProvider, vscode.Disposable {
   private disposed = false;
   private creating = 0;
   private ready = false;
+  private renaming = false;
   constructor(private readonly root: string) {}
   resolveWebviewView(view: vscode.WebviewView) {
     this.view = view;
@@ -64,6 +74,10 @@ class TerminalView implements vscode.WebviewViewProvider, vscode.Disposable {
     if (typeof m.id !== "string") return;
     const session = this.sessions.get(m.id);
     if (!session) return;
+    if (m.type === "rename") {
+      void this.rename(session);
+      return;
+    }
     if (
       m.type === "input" &&
       typeof m.data === "string" &&
@@ -76,6 +90,37 @@ class TerminalView implements vscode.WebviewViewProvider, vscode.Disposable {
       session.close();
       this.sessions.delete(m.id);
       this.state();
+    }
+  }
+  private async rename(session: Session) {
+    if (this.renaming) return;
+    this.renaming = true;
+    try {
+      const value = await vscode.window.showInputBox({
+        title: "Переименовать сессию",
+        prompt: "Название в списке терминалов",
+        value: session.name,
+        validateInput: sessionNameError,
+      });
+      if (
+        value === undefined ||
+        this.disposed ||
+        this.sessions.get(session.id) !== session
+      )
+        return;
+      const error = sessionNameError(value);
+      if (error) {
+        await vscode.window.showErrorMessage(error);
+        return;
+      }
+      session.name = value.trim();
+      this.state();
+    } catch (e) {
+      await vscode.window.showErrorMessage(
+        e instanceof Error ? e.message : "Не удалось переименовать сессию.",
+      );
+    } finally {
+      this.renaming = false;
     }
   }
   async create() {

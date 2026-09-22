@@ -54,7 +54,7 @@ export class Session extends EventEmitter {
   private bufferedBytes = 0;
   private truncated = false;
   constructor(
-    readonly name: string,
+    public name: string,
     readonly cwd: string,
   ) {
     super();

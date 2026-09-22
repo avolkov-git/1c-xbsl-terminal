@@ -97,7 +97,8 @@ function choose(id: string, focus = true) {
   for (const [key, s] of sessions) s.element.hidden = key !== id;
   const s = sessions.get(id);
   empty.hidden = !!s;
-  for (const name of ["clear", "close"])
+  select.title = s?.state.name ?? "Нет сессий";
+  for (const name of ["rename", "clear", "close"])
     document.querySelector<HTMLButtonElement>("#" + name)!.disabled = !s;
   if (s) {
     const labels: Record<string, string> = {
@@ -198,6 +199,11 @@ window.addEventListener("message", (e) => {
       o.value = "";
       select.append(o);
     }
+    if (newest) {
+      notice.hidden = true;
+      notice.textContent = "";
+      noticeSession = undefined;
+    }
     choose(
       newest ||
         (sessions.has(active) ? active : ([...sessions.keys()][0] ?? "")),
@@ -218,11 +224,15 @@ window.addEventListener("message", (e) => {
     showNotice(m.message);
 });
 select.addEventListener("change", () => choose(select.value));
-for (const name of ["new", "start"])
-  document.querySelector("#" + name)!.addEventListener("click", () => {
-    notice.hidden = true;
-    api.postMessage({ type: "new" });
-  });
+document.querySelector("#start")!.addEventListener("click", () => {
+  notice.hidden = true;
+  api.postMessage({ type: "new" });
+});
+document
+  .querySelector("#rename")!
+  .addEventListener("click", () =>
+    api.postMessage({ type: "rename", id: active }),
+  );
 document
   .querySelector("#close")!
   .addEventListener("click", () =>

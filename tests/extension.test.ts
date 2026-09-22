@@ -75,3 +75,83 @@ test("public API: bottom view, no auto-start, bridge, reload, config, disposal",
   host.send({ type: "ready" });
   assert.deepEqual(host.messages.at(-1).sessions, []);
 });
+
+test("rename preserves the selected Bash process, handles cancel and a closed session", async (t) => {
+  const cwd = await fs.mkdtemp(path.join(os.tmpdir(), "xbsl-rename-test-"));
+  t.after(() => fs.rm(cwd, { recursive: true, force: true }));
+  const host = hostHarness(root, cwd);
+  t.after(() => host.dispose());
+  host.mount();
+  host.send({ type: "ready" });
+  await host.commands.get("xbslTerminal.new")!();
+  await host.commands.get("xbslTerminal.new")!();
+  const states = () =>
+    host.messages.filter((m) => m.type === "state").at(-1).sessions;
+  await waitFor(
+    () =>
+      states().length === 2 &&
+      states().every((s: any) => s.state === "running"),
+    "two running sessions",
+  );
+  const [first, second] = states();
+  host.configure("  Логи сервера  ");
+  host.send({ type: "rename", id: second.id });
+  await waitFor(() => states()[1].name === "Логи сервера", "renamed session");
+  assert.equal(host.inputRequests.at(-1)?.value, second.name);
+  assert.deepEqual(states()[0], first);
+  assert.deepEqual(states()[1], { ...second, name: "Логи сервера" });
+  process.kill(second.pid, 0);
+  let output = "";
+  host.onPost((m) => {
+    if (m.type === "data" && m.id === second.id) {
+      output += Buffer.from(m.data, "base64").toString("utf8");
+      host.send({ type: "ack", id: m.id, offset: m.offset });
+    }
+  });
+  host.send({
+    type: "input",
+    id: second.id,
+    data: "printf 'RENAME%s\\n' _OK\n",
+  });
+  await waitFor(
+    () => output.includes("RENAME_OK"),
+    "same Bash accepts input after rename",
+  );
+  host.send({ type: "ready" });
+  assert.equal(states()[1].name, "Логи сервера");
+
+  for (const value of [
+    undefined,
+    "  ",
+    "x".repeat(81),
+    "logs\nexit",
+    "logs\u001b[31m",
+  ]) {
+    const count = host.inputRequests.length;
+    host.configure(value);
+    host.send({ type: "rename", id: second.id });
+    await waitFor(
+      () => host.inputRequests.length === count + 1,
+      "rename input",
+    );
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    assert.equal(states()[1].name, "Логи сервера");
+  }
+  assert.equal(host.errors.length, 4);
+  const count = host.inputRequests.length;
+  host.send({ type: "rename", id: "unknown" });
+  assert.equal(host.inputRequests.length, count);
+
+  let resolveInput!: (value: string | undefined) => void;
+  host.api.window.showInputBox = () =>
+    new Promise((resolve) => {
+      resolveInput = resolve;
+    });
+  host.send({ type: "rename", id: first.id });
+  host.send({ type: "close", id: first.id });
+  resolveInput("Already closed");
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  assert.equal(states().length, 1);
+  assert.equal(states()[0].id, second.id);
+  assert.equal(states()[0].name, "Логи сервера");
+});

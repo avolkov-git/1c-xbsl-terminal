@@ -2,7 +2,7 @@
   "name": "1c-xbsl-terminal",
   "displayName": "Терминал (Bash)",
   "description": "Интерактивный Bash-терминал для IDE 1С:Элемент: вкладки, цвета, история и полноэкранные программы.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "Alexandr Volkov",
   "private": true,
   "license": "MIT",

@@ -1,5 +1,6 @@
 import Module from "node:module";
 import path from "node:path";
+import type { InputBoxOptions } from "vscode";
 
 /** Public API test double. This is not an Element runtime. */
 export function hostHarness(root: string, cwd: string) {
@@ -7,6 +8,7 @@ export function hostHarness(root: string, cwd: string) {
   const messages: any[] = [];
   const subscriptions: { dispose(): void }[] = [];
   const errors: string[] = [];
+  const inputRequests: InputBoxOptions[] = [];
   let provider: any,
     receiver: ((m: any) => void) | undefined,
     disposer: (() => void) | undefined,
@@ -68,7 +70,10 @@ export function hostHarness(root: string, cwd: string) {
         return { dispose() {} };
       },
       showQuickPick: async (items: any[]) => items[0],
-      showInputBox: async () => pick,
+      showInputBox: async (options: InputBoxOptions = {}) => {
+        inputRequests.push(options);
+        return pick;
+      },
       showErrorMessage: async (s: string) => {
         errors.push(s);
       },
@@ -113,6 +118,7 @@ export function hostHarness(root: string, cwd: string) {
     view,
     messages,
     errors,
+    inputRequests,
     commands,
     mount,
     send: (m: any) => receiver?.(m),

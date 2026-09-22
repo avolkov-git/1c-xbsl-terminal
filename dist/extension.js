@@ -342,8 +342,9 @@ function html(root) {
  FIRST VIEWPORT: A 36px toolbar, flexible terminal, and a 24px workspace footer; the empty state offers Open Bash.
  FORM: Native IDE panel; pinned reference from the owner, seed key user-vscode-terminal.
  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md -->
- <header class="toolbar"><label class="session-picker"><span class="sr-only">\u0421\u0435\u0441\u0441\u0438\u044F Bash</span><select id="sessions" aria-label="\u0421\u0435\u0441\u0441\u0438\u044F Bash"><option value="">\u041D\u0435\u0442 \u0441\u0435\u0441\u0441\u0438\u0439</option></select></label><span id="status" role="status">\u0421\u0435\u0440\u0432\u0435\u0440</span><div class="actions">
- <button id="new" title="\u041D\u043E\u0432\u044B\u0439 Bash" aria-label="\u041D\u043E\u0432\u044B\u0439 Bash">${svg('<path d="M8 2v12M2 8h12"/>')}</button>
+ <header class="toolbar"><div class="session-controls"><label class="session-picker"><span class="sr-only">\u0421\u0435\u0441\u0441\u0438\u044F Bash</span><select id="sessions" aria-label="\u0421\u0435\u0441\u0441\u0438\u044F Bash"><option value="">\u041D\u0435\u0442 \u0441\u0435\u0441\u0441\u0438\u0439</option></select></label>
+ <button id="rename" title="\u041F\u0435\u0440\u0435\u0438\u043C\u0435\u043D\u043E\u0432\u0430\u0442\u044C \u0441\u0435\u0441\u0441\u0438\u044E" aria-label="\u041F\u0435\u0440\u0435\u0438\u043C\u0435\u043D\u043E\u0432\u0430\u0442\u044C \u0441\u0435\u0441\u0441\u0438\u044E" disabled>${svg('<path d="m3 10 8-8 3 3-8 8-4 1zM9 4l3 3"/>')}</button>
+ </div><span id="status" role="status">\u0421\u0435\u0440\u0432\u0435\u0440</span><div class="actions">
  <button id="clear" title="\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u044D\u043A\u0440\u0430\u043D" aria-label="\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u044D\u043A\u0440\u0430\u043D" disabled>${svg('<path d="m3 11 7-8 3 3-7 8H3l-1-1zM7 7l3 3M8 14h6"/>')}</button>
  <button id="close" title="\u0417\u0430\u043A\u0440\u044B\u0442\u044C \u0441\u0435\u0441\u0441\u0438\u044E" aria-label="\u0417\u0430\u043A\u0440\u044B\u0442\u044C \u0441\u0435\u0441\u0441\u0438\u044E" disabled>${svg('<path d="M3 4h10M6 2h4M4 4l1 10h6l1-10M7 6v6M9 6v6"/>')}</button>
  <button id="configure" title="\u041F\u0443\u0442\u044C \u043A Bash" aria-label="\u041F\u0443\u0442\u044C \u043A Bash">${svg('<circle cx="8" cy="8" r="3"/><path d="M8 1v3m0 8v3M1 8h3m8 0h3M3 3l2 2m6 6 2 2M3 13l2-2m6-6 2-2"/>')}</button>
@@ -355,6 +356,14 @@ function html(root) {
 }
 
 // src/extension.ts
+function sessionNameError(value) {
+  if (!value.trim()) return "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0441\u0435\u0441\u0441\u0438\u0438.";
+  if (value.trim().length > 80)
+    return "\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u043D\u0435 \u0434\u043B\u0438\u043D\u043D\u0435\u0435 80 \u0441\u0438\u043C\u0432\u043E\u043B\u043E\u0432.";
+  if (/[\u0000-\u001f\u007f-\u009f]/.test(value))
+    return "\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0434\u043E\u043B\u0436\u043D\u043E \u0431\u044B\u0442\u044C \u043E\u0434\u043D\u043E\u0439 \u0441\u0442\u0440\u043E\u043A\u043E\u0439 \u0431\u0435\u0437 \u0443\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0445 \u0441\u0438\u043C\u0432\u043E\u043B\u043E\u0432.";
+  return void 0;
+}
 var TerminalView = class {
   constructor(root) {
     this.root = root;
@@ -365,6 +374,7 @@ var TerminalView = class {
   disposed = false;
   creating = 0;
   ready = false;
+  renaming = false;
   resolveWebviewView(view) {
     this.view = view;
     this.ready = false;
@@ -413,6 +423,10 @@ var TerminalView = class {
     if (typeof m.id !== "string") return;
     const session = this.sessions.get(m.id);
     if (!session) return;
+    if (m.type === "rename") {
+      void this.rename(session);
+      return;
+    }
     if (m.type === "input" && typeof m.data === "string" && m.data.length <= 32768)
       session.input(m.data);
     if (m.type === "resize") session.resize(m.cols, m.rows);
@@ -421,6 +435,33 @@ var TerminalView = class {
       session.close();
       this.sessions.delete(m.id);
       this.state();
+    }
+  }
+  async rename(session) {
+    if (this.renaming) return;
+    this.renaming = true;
+    try {
+      const value = await vscode.window.showInputBox({
+        title: "\u041F\u0435\u0440\u0435\u0438\u043C\u0435\u043D\u043E\u0432\u0430\u0442\u044C \u0441\u0435\u0441\u0441\u0438\u044E",
+        prompt: "\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u043E\u0432",
+        value: session.name,
+        validateInput: sessionNameError
+      });
+      if (value === void 0 || this.disposed || this.sessions.get(session.id) !== session)
+        return;
+      const error = sessionNameError(value);
+      if (error) {
+        await vscode.window.showErrorMessage(error);
+        return;
+      }
+      session.name = value.trim();
+      this.state();
+    } catch (e) {
+      await vscode.window.showErrorMessage(
+        e instanceof Error ? e.message : "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043F\u0435\u0440\u0435\u0438\u043C\u0435\u043D\u043E\u0432\u0430\u0442\u044C \u0441\u0435\u0441\u0441\u0438\u044E."
+      );
+    } finally {
+      this.renaming = false;
     }
   }
   async create() {
